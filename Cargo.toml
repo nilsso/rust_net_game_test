@@ -5,10 +5,9 @@ authors = ["Nils Olsson <nilso@enosis.net>"]
 edition = "2018"
 
 [dependencies]
+bincode = "1.1"
 clap = { version = "2.33", features = ["yaml"] }
-rustyline = "4.1"
+crossbeam-channel = "0.3"
 laminar = "0.2"
 serde = "1.0"
 serde_derive = "1.0"
-bincode = "1.1"
-crossbeam-channel = "0.3"
