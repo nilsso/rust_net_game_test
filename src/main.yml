@@ -5,13 +5,16 @@ subcommands:
   - server:
       args:
         - bind:
+            long: bind
             help: Server address
             default_value: "127.0.0.1:9001"
   - client:
       args:
         - bind:
+            long: bind
             help: Client address
             default_value: "127.0.0.1:9002"
         - address:
+            long: address
             help: Server address
             default_value: "127.0.0.1:9001"

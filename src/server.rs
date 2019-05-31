@@ -66,6 +66,7 @@ impl Server {
             return;
         }
         loop {
+            println!("receiving...");
             if let Ok(Some(packet)) = self.recv() {
                 let address = packet.addr();
                 if let Some(message) = deserialize(packet.payload()).ok() {
