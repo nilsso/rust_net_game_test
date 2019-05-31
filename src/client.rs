@@ -91,12 +91,8 @@ impl Client {
             SocketEvent::Packet(packet) => {
                 return Ok(Some(packet));
             }
-            SocketEvent::Timeout(address) => {
-                println!("{} timed out", address);
-            }
-            SocketEvent::Connect(address) => {
-                println!("{} connection", address);
-            }
+            SocketEvent::Timeout(address) => { /* TODO: Logging */ }
+            SocketEvent::Connect(address) => { /* TODO: Logging */ }
         }
         Ok(None)
     }
