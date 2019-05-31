@@ -13,6 +13,7 @@ use std::thread;
 
 // Internal code
 use crate::client;
+use client::Message as ClientMessage;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Message {
@@ -20,10 +21,10 @@ pub enum Message {
 }
 
 pub struct Server {
-    packet_tx: Sender<Packet>,
-    event_rx: Receiver<SocketEvent>,
     init: bool,
     socket: Option<Socket>,
+    packet_tx: Sender<Packet>,
+    event_rx: Receiver<SocketEvent>,
 }
 
 enum ClientStatus {
@@ -44,10 +45,10 @@ impl Server {
     pub fn new(bind: SocketAddr) -> Self {
         let (mut socket, packet_tx, event_rx) = Socket::bind(bind).unwrap();
         Self {
-            packet_tx,
-            event_rx,
             init: false,
             socket: Some(socket),
+            packet_tx,
+            event_rx,
         }
     }
 
@@ -83,7 +84,9 @@ impl Server {
                 let packet = Packet::reliable_unordered(address, data);
                 self.packet_tx.send(packet)?;
             }
-            Err(_) => { /* Failed to serialize. TODO: Logging */ }
+            Err(e) => {
+                eprintln!("error {}", e);
+            }
         }
         Ok(())
     }
@@ -94,13 +97,17 @@ impl Server {
             SocketEvent::Packet(packet) => {
                 return Ok(Some(packet));
             }
-            SocketEvent::Timeout(address) => { /* TODO: Logging */ }
-            SocketEvent::Connect(address) => { /* TODO: Logging */ }
+            SocketEvent::Timeout(address) => {
+                println!("{} timed out", address);
+            }
+            SocketEvent::Connect(address) => {
+                println!("{} connection", address);
+            }
         }
         Ok(None)
     }
 
-    pub fn action(&mut self, address: SocketAddr, message: client::Message) {
+    pub fn action(&mut self, address: SocketAddr, message: ClientMessage) {
         match message {
             client::Message::Ping => {
                 if self.pong(address) {

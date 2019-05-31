@@ -14,6 +14,7 @@ use std::time::Duration;
 
 // Internal code
 use crate::server;
+use server::Message as ServerMessage;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Message {
@@ -59,8 +60,8 @@ impl Client {
             eprintln!("Client not initialized!");
             return;
         }
+        self.server = Some(ServerRepr { address });
         loop {
-            self.server = Some(ServerRepr { address });
             if self.ping() {
                 println!("pong {}", address);
                 thread::sleep(Duration::from_millis(500));
@@ -76,7 +77,9 @@ impl Client {
                     let packet = Packet::reliable_unordered(server.address, data);
                     self.packet_tx.send(packet)?;
                 }
-                Err(_) => { /* Failed to serialize. TODO: Logging */ }
+                Err(e) => {
+                    eprintln!("error {}", e);
+                }
             }
         }
         Ok(())
@@ -88,13 +91,25 @@ impl Client {
             SocketEvent::Packet(packet) => {
                 return Ok(Some(packet));
             }
-            SocketEvent::Timeout(address) => { /* TODO: Logging */ }
-            SocketEvent::Connect(address) => { /* TODO: Logging */ }
+            SocketEvent::Timeout(address) => {
+                println!("{} timed out", address);
+            }
+            SocketEvent::Connect(address) => {
+                println!("{} connection", address);
+            }
         }
         Ok(None)
     }
 
     pub fn ping(&mut self) -> bool {
-        self.send(Message::Ping).is_ok() && self.recv().is_ok()
+        if self.send(Message::Ping).is_ok() {
+            if let Ok(Some(packet)) = self.recv() {
+                let data = deserialize::<ServerMessage>(packet.payload());
+                if data.is_ok() && data.ok() == Some(ServerMessage::Pong) {
+                    return true;
+                }
+            }
+        }
+        false
     }
 }
